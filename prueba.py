@@ -20,7 +20,7 @@ numerodatosN = len(new_df)
 print("Número de datos eliminando duplicados:", numerodatosN)
 
 # Umbral mínimo de coincidencia
-threshold = 70
+threshold = 60
 
 # Crear una lista de nombres en el DataFrame original
 nombres_originales = df['NOMBRE DEL INVESTIGADOR'].tolist()
