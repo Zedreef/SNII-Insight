@@ -1,5 +1,6 @@
 import os
 import re
+import unicodedata
 import pandas as pd
 
 # Configuración
@@ -11,26 +12,51 @@ CONFIG = {
     "archivo_nombres_descartados": "Nombres_Descartados.csv",
 }
 
+# Diccionario de equivalencias
+equivalencias = {
+    "Ð": "Ñ",
+    ";": "Ñ",
+    "▄": "Ü",
+    "_": "Ü",
+    "Þ": "Ü",
+    "0": "O",
+    "¬": ".",
+    "╚": "È",
+    "+": "È",
+    "¦": "É",
+    "Ì": "Í",
+    "Ò": "Ó"
+}
+
 # === Funciones de utilidad ===
 def limpiar_nombre(nombre):
     """Limpia y normaliza un nombre."""
     if pd.notna(nombre) and isinstance(nombre, str):
+        nombre = normalizar_nombre(nombre) # Normalizar caracteres
         nombre = re.sub(r'\s*,\s*', ',', nombre.strip())
         nombre = re.sub(r'^-', '', nombre)  # Quitar guiones iniciales
         return nombre
     return None
 
+def normalizar_nombre(nombre):
+    """Normaliza caracteres en un nombre."""
+    if pd.notna(nombre) and isinstance(nombre, str):
+        nombre = unicodedata.normalize('NFKD', nombre).encode('ascii', 'ignore').decode('ascii')
+        nombre = nombre.replace("Ñ", "N")
+        # Aplicar equivalencias del diccionario
+        for caracter, reemplazo in equivalencias.items():
+            nombre = nombre.replace(caracter, reemplazo)
+        return nombre
+    return None
 
 def verificar_separacion(nombre):
     """Verifica si un nombre tiene separación por coma."""
     return isinstance(nombre, str) and ',' in nombre
 
-def tiene_caracteres_raros(nombre):
+def verifica_caracteres(nombre):
     """Identifica caracteres no permitidos."""
-    # Permitimos caracteres alfabéticos, espacios, puntos, comillas y guiones
-    # r"[^a-zA-ZÁÉÍÓÚÑáéíóúñÜü().\s\"'-]"
     if isinstance(nombre, str):
-        return bool(re.search(r"[^a-zA-ZÑñÜü.,\s\"'-]", nombre))
+        return bool(re.search(r"[^a-zA-Z.,\s\"'-]", nombre))
     return False
 
 
@@ -67,6 +93,7 @@ def limpiar_nombres(df):
     """Procesa la lista de nombres para dejar solo los válidos."""
     # Extraer nombres únicos
     nombres_unicos = df["NOMBRE DEL INVESTIGADOR"].dropna().unique()
+    nombres_unicos = [normalizar_nombre(nombre) for nombre in nombres_unicos]
     df_nombres = pd.DataFrame({"NOMBRE DEL INVESTIGADOR": sorted(nombres_unicos)})
 
     # Guardar nombres únicos
@@ -82,7 +109,7 @@ def limpiar_nombres(df):
 
     # Verificar y eliminar nombres con caracteres raros
     df_validos.loc[:, "RAZON_DESCARTE"] = df_validos["NOMBRE DEL INVESTIGADOR"].apply(
-        lambda x: "Caracteres raros" if tiene_caracteres_raros(x) else None
+        lambda x: "Caracteres raros" if verifica_caracteres(x) else None
     )
     nombres_limpios = df_validos[df_validos["RAZON_DESCARTE"].isna()]  # Sin caracteres raros
     descartados_caracteres = df_validos[~df_validos["RAZON_DESCARTE"].isna()]  # Con caracteres raros
