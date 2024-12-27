@@ -144,6 +144,4 @@ if __name__ == "__main__":
     print("=== Procesando archivo de nombres no encontrados ===")
     procesar_nombres_no_encontrados(ruta_nombres_no_encontrados, nombres_limpios, ruta_nombres_no_encontrados_2)
     print("=== Proceso completado. ===")
-    # Restaurar la salida estándar después de procesar
-    # restaurar_salida()
     print("El archivo Nombres_No_Encontrados.csv ha sido generado.")
