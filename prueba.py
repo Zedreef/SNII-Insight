@@ -1,66 +1,34 @@
-from rapidfuzz import fuzz, process
-import pandas as pd
-import time
+def reformatear_nombre(nombre):
+    """
+    Cambia el formato de 'NOMBRE APELLIDO' a 'APELLIDO NOMBRE'
+    """
+    print(f"Procesando: {nombre}")  # Mensaje de depuración
 
-file_path = 'dataset\Investigadores_vigentes_2023.xlsx'
-df = pd.read_excel(file_path)
+    # Separar el nombre por espacios
+    partes = nombre.split()
 
-print(df.head())
-df = df.dropna(subset=['NOMBRE DEL INVESTIGADOR'])
-numerodatos = len(df) 
-print("Número de datos:", numerodatos)
+    # Verificar que el nombre tenga más de un componente (nombre y apellido)
+    if len(partes) > 1:
+        # Suponer que el último componente es el apellido y todo lo anterior es el nombre
+        apellido = ' '.join(partes[-2:])  # Los últimos dos componentes son el apellido
+        nombre = ' '.join(partes[:-2])  # Todos los componentes anteriores son el nombre
+        reformatted_name = f"{apellido} {nombre}"
+        print(f"Reformateado a: {reformatted_name}")  # Mensaje de depuración
+        return reformatted_name
 
-# Limpiar y preparar los datos
-new_df = pd.DataFrame({'Investigador': df['NOMBRE DEL INVESTIGADOR']})
-new_df['Investigador'] = new_df['Investigador'].str.replace(r'\s*,\s*', ',', regex=True)
-new_df['Investigador'] = new_df['Investigador'].str.strip()
-new_df = new_df.drop_duplicates(subset=['Investigador'])
-new_df = new_df[new_df['Investigador'].notna()]
+    print("Nombre sin cambios")  # Mensaje de depuración
+    return nombre  # Si no tiene más de una parte, no hacer cambios
 
-numerodatosN = len(new_df)
-print("Número de datos eliminando duplicados:", numerodatosN)
+# Lista de ejemplo
+lista = [
+    "AARON TORRES HUERTA",
+    "ALAN PAVLOVICH ABRIL",
+    "ALEJANDRA ISABEL VARGAS SEGURA",
+    "ALFREDO RAYA MONTANO",
+    # ... (otros nombres)
+]
 
-# Parámetros de coincidencia
-threshold = 60
-nombres_originales = df['NOMBRE DEL INVESTIGADOR'].tolist()
-
-
-# Función de búsqueda de coincidencia
-def bmc(investigador):
-    if investigador:  # Validar que no sea vacío o nulo
-        mejor_coincidencia = process.extractOne(
-            investigador, nombres_originales, scorer=fuzz.ratio, score_cutoff=threshold
-        )
-        return mejor_coincidencia
-    return None
-
-# Buscar coincidencias de forma secuencial
-def obtener_coincidencias(investigadores):
-    coincidencias = []
-    for investigador in investigadores:
-        mejor_coincidencia = bmc(investigador)
-        if mejor_coincidencia:
-            coincidencias.append({
-                'Nombre Buscado': investigador,
-                'Mejor Coincidencia': mejor_coincidencia[0],
-                'Similitud': mejor_coincidencia[1]
-            })
-    return coincidencias
-
-start_time = time.time()
-
-# Obtener coincidencias
-coincidencias = obtener_coincidencias(new_df['Investigador'].tolist())
-
-end_time = time.time()
-execution_time = end_time - start_time
-
-# Convertir resultados a DataFrame
-coincidencias_df = pd.DataFrame(coincidencias)
-print(coincidencias_df)
-print(f"Tiempo de ejecución: {execution_time / 60:.2f} minutos")
-
-# Guardar el DataFrame en un archivo CSV
-output_file = "coincidencias.csv" 
-coincidencias_df.to_csv(output_file, index=False, encoding='utf-8-sig')
-print(f"Los resultados se han guardado en el archivo: {output_file}")
+# Aplicar la función a cada nombre en la lista
+for nombre in lista:
+    nuevo_nombre = reformatear_nombre(nombre)
+    print(f"Nuevo nombre: {nuevo_nombre}\n")  # Mensaje de depuración final
