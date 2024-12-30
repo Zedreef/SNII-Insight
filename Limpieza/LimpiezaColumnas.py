@@ -96,59 +96,65 @@ def procesar_archivo(df: pd.DataFrame, año: int) -> pd.DataFrame:
         df = df.drop(columns=[col for col in columnas_eliminar if col in df.columns], errors="ignore")
     return df
 
-# Procesar los archivos
-for archivo in os.listdir(ruta_carpeta):
-    if archivo.startswith("Investigadores_vigentes_20") and archivo.endswith(".xlsx"):
-        ruta_archivo = os.path.join(ruta_carpeta, archivo)
+# Funcion Principal
+def main():
 
-        try:
-            # Extraer el año del nombre del archivo
-            año = int(archivo.split("_")[-1].split(".")[0])
-            logger.info(f"Procesando archivo: {archivo}, Año: {año}")
+    # Procesar los archivos
+    for archivo in os.listdir(ruta_carpeta):
+        if archivo.startswith("Investigadores_vigentes_20") and archivo.endswith(".xlsx"):
+            ruta_archivo = os.path.join(ruta_carpeta, archivo)
 
-            # Leer archivo en un DataFrame
-            df = pd.read_excel(ruta_archivo)
+            try:
+                # Extraer el año del nombre del archivo
+                año = int(archivo.split("_")[-1].split(".")[0])
+                logger.info(f"Procesando archivo: {archivo}, Año: {año}")
 
-            # Cambiar los nombres de las columnas
-            df = cambiar_nombres_columnas(df, columnas_cambio)
+                # Leer archivo en un DataFrame
+                df = pd.read_excel(ruta_archivo)
 
-            # Agregar columnas faltantes si es necesario
-            if str(año) in columnas_faltantes_por_año:
-                columnas_faltantes = columnas_faltantes_por_año[str(año)]
-                df = agregar_columnas_faltantes(df, columnas_faltantes)
+                # Cambiar los nombres de las columnas
+                df = cambiar_nombres_columnas(df, columnas_cambio)
 
-            # Mover columnas en 2021 y 2022
-            if año in [2021, 2022]:
-                for columna, destino in columnas_a_mover.items():
-                    df = mover_columna(df, columna, destino)
+                # Agregar columnas faltantes si es necesario
+                if str(año) in columnas_faltantes_por_año:
+                    columnas_faltantes = columnas_faltantes_por_año[str(año)]
+                    df = agregar_columnas_faltantes(df, columnas_faltantes)
 
-            # Procesar el archivo según el año
-            df = procesar_archivo(df, año)
+                # Mover columnas en 2021 y 2022
+                if año in [2021, 2022]:
+                    for columna, destino in columnas_a_mover.items():
+                        df = mover_columna(df, columna, destino)
 
-            # Guardar el archivo procesado
-            nombre_salida = f"{archivo.replace('.xlsx', '.csv')}"
-            ruta_guardar = os.path.join(ruta_guardado, nombre_salida)
-            df.to_csv(ruta_guardar, index=False, encoding='utf-8-sig')
-            logger.info(f"Archivo procesado y guardado: {nombre_salida}")
-        except Exception as e:
-            logger.error(f"Error procesando {archivo}: {e}")
+                # Procesar el archivo según el año
+                df = procesar_archivo(df, año)
 
-# Comparar columnas entre archivos
-columnas_archivos = {}
-for archivo in os.listdir(ruta_guardado):
-    if archivo.endswith(".csv"):
-        ruta_archivo = os.path.join(ruta_guardado, archivo)
-        try:
-            df = pd.read_csv(ruta_archivo)
-            columnas_archivos[archivo] = list(df.columns)
-        except Exception as e:
-            logger.error(f"Error leyendo {archivo}: {e}")
+                # Guardar el archivo procesado
+                nombre_salida = f"{archivo.replace('.xlsx', '.csv')}"
+                ruta_guardar = os.path.join(ruta_guardado, nombre_salida)
+                df.to_csv(ruta_guardar, index=False, encoding='utf-8-sig')
+                logger.info(f"Archivo procesado y guardado: {nombre_salida}")
+            except Exception as e:
+                logger.error(f"Error procesando {archivo}: {e}")
 
-# Verificar esquemas únicos
-nombres_columnas_unicos = set(tuple(columnas) for columnas in columnas_archivos.values())
-if len(nombres_columnas_unicos) == 1:
-    logger.info("✅ Todos los archivos tienen las mismas columnas.")
-else:
-    logger.warning("❌ Los archivos tienen diferentes esquemas de columnas.")
-    for archivo, columnas in columnas_archivos.items():
-        logger.info(f"{archivo}: {columnas}")
+    # Comparar columnas entre archivos
+    columnas_archivos = {}
+    for archivo in os.listdir(ruta_guardado):
+        if archivo.endswith(".csv"):
+            ruta_archivo = os.path.join(ruta_guardado, archivo)
+            try:
+                df = pd.read_csv(ruta_archivo)
+                columnas_archivos[archivo] = list(df.columns)
+            except Exception as e:
+                logger.error(f"Error leyendo {archivo}: {e}")
+
+    # Verificar esquemas únicos
+    nombres_columnas_unicos = set(tuple(columnas) for columnas in columnas_archivos.values())
+    if len(nombres_columnas_unicos) == 1:
+        logger.info("✅ Todos los archivos tienen las mismas columnas.")
+    else:
+        logger.warning("❌ Los archivos tienen diferentes esquemas de columnas.")
+        for archivo, columnas in columnas_archivos.items():
+            logger.info(f"{archivo}: {columnas}")
+
+if __name__ == "__main__":
+    main()

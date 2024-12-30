@@ -7,9 +7,9 @@ import pandas as pd
 CONFIG = {
     "directorio_datasets": "datasetMD",
     "archivo_salida": "datasetMD.csv",
-    "archivo_nombres": "nombres_investigadores.csv",
-    "archivo_nombres_limpios": "Nombres_Limpios.csv",
-    "archivo_nombres_descartados": "Nombres_Descartados.csv",
+    "archivo_nombres": "Limpieza/nombres_investigadores.csv",
+    "archivo_nombres_limpios": "Limpieza/Nombres_Limpios.csv",
+    "archivo_nombres_descartados": "Limpieza/Nombres_Descartados.csv",
 }
 
 # Diccionario de equivalencias
@@ -135,10 +135,14 @@ def limpiar_nombres(df):
 
     return nombres_limpios
 
-# === Ejecutar el script ===
-if __name__ == "__main__":
+def main():
     print("=== Combinando archivos ===")
     df_combinado = combinar_archivos()
     print("=== Procesando nombres ===")
     limpiar_nombres(df_combinado)
     print("=== Proceso completado. ===")
+
+
+# === Ejecutar el script ===
+if __name__ == "__main__":
+    main()

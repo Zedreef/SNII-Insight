@@ -130,13 +130,12 @@ def procesar_nombres_no_encontrados(ruta_no_encontrados, nombres_limpios, ruta_n
             writer.writerow({'NOMBRE DEL INVESTIGADOR': nombre})
 
 # Rutas de los archivos
-ruta_nombres_limpios = 'Nombres_Limpios.csv'
-ruta_nombres_descartados = 'Nombres_Descartados.csv'
-ruta_nombres_no_encontrados = 'Nombres_No_Encontrados.csv'
-ruta_nombres_no_encontrados_2 = 'Nombres_No_Encontrados_Actualizados.csv'
+ruta_nombres_limpios = 'Limpieza/Nombres_Limpios.csv'
+ruta_nombres_descartados = 'Limpieza/Nombres_Descartados.csv'
+ruta_nombres_no_encontrados = 'Limpieza/Nombres_No_Encontrados.csv'
+ruta_nombres_no_encontrados_2 = 'Limpieza/Nombres_No_Encontrados_Actualizados.csv'
 
-# === Ejecutar el script ===
-if __name__ == "__main__":
+def main():
     print("=== Procesando archivo ===")
     nombres_limpios = leer_nombres_limpios(ruta_nombres_limpios)
     print("=== Procesando nombres ===")
@@ -145,3 +144,7 @@ if __name__ == "__main__":
     procesar_nombres_no_encontrados(ruta_nombres_no_encontrados, nombres_limpios, ruta_nombres_no_encontrados_2)
     print("=== Proceso completado. ===")
     print("El archivo Nombres_No_Encontrados.csv ha sido generado.")
+
+# === Ejecutar el script ===
+if __name__ == "__main__":
+    main()
