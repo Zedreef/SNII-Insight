@@ -1,5 +1,5 @@
 import logging
-import time
+from tqdm import tqdm
 import pandas as pd
 from rapidfuzz import process, fuzz
 
@@ -57,7 +57,7 @@ def preparar_columna_investigador(df):
     logging.info("Columna 'INVESTIGADOR' creada y posicionada correctamente.")
     return df
 
-def encontrar_mejor_match(nombre, nombres_limpios, umbral=75):
+def encontrar_mejor_match(nombre, nombres_limpios, umbral=85):
     """Encuentra el mejor match para un nombre usando RapidFuzz."""
     mejor_match = process.extractOne(nombre, nombres_limpios, scorer=fuzz.ratio)
     if mejor_match and mejor_match[1] >= umbral:
@@ -68,11 +68,14 @@ def asignar_investigadores(dataset_dm, nombres_limpios):
     """Asigna nombres de investigadores usando coincidencias basadas en RapidFuzz."""
     logging.info("Iniciando asignación de investigadores...")
     nombres_limpios_list = nombres_limpios['NOMBRE DEL INVESTIGADOR'].tolist()
-    for index, row in dataset_dm.iterrows():
+
+    # usamos tqdm para mostrar el proceso
+    for index, row in tqdm(dataset_dm.iterrows(), total=dataset_dm.shape[0], desc="Asignando investigadores"):
         nombre_original = row['NOMBRE DEL INVESTIGADOR']
         mejor_match = encontrar_mejor_match(nombre_original, nombres_limpios_list)
         dataset_dm.at[index, 'INVESTIGADOR'] = mejor_match
         logging.debug(f"Procesado: {nombre_original} -> {mejor_match}")
+
     logging.info("Asignación de investigadores completada.")
     return dataset_dm
 
@@ -81,7 +84,7 @@ def main():
     # Archivos de entrada
     dataset_path = "datasetMD.csv"
     nombres_path = "Nombres_Limpios_Final.csv"
-    output_path = "datasetF.csv"
+    output_path = "Limpieza/datasetF.csv"
 
     # Cargar los archivos
     dataset_dm, nombres_limpios = cargar_archivos(dataset_path, nombres_path)
@@ -104,10 +107,4 @@ def main():
     logging.info(f"Archivo guardado con éxito en {output_path}.")
 
 if __name__ == "__main__":
-    inicio = time.time()
     main()
-    fin = time.time()
-    print("=== Fin de la Limpieza de datos ===")
-    tiempo_total_segundos = fin - inicio
-    tiempo_total_horas = tiempo_total_segundos / 60
-    print(f"Tiempo total de ejecución FINAL: {tiempo_total_horas:.2f} minutos")

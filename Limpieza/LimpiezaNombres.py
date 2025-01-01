@@ -1,7 +1,11 @@
 import csv
-import sys
+import logging
+from tqdm import tqdm
 from rapidfuzz import fuzz, process
-from multiprocessing import Pool, cpu_count, Manager
+from multiprocessing import Pool, cpu_count
+
+# Configuración de logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 def normalizar_nombre_limpio(nombre):
     """
@@ -19,7 +23,7 @@ def leer_nombres_limpios(ruta):
     nombres_limpios = []
     with open(ruta, newline='', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
-        for row in reader:
+        for row in tqdm(reader, desc="Leyendo nombres limpios"):
             nombre_normalizado = normalizar_nombre_limpio(row['NOMBRE DEL INVESTIGADOR'])
             nombres_limpios.append(nombre_normalizado)
     return nombres_limpios
@@ -37,19 +41,19 @@ def comparar_nombre(args):
     # Convertir similitud a float por si no lo es
     similitud = float(similitud)
 
-    print(f"Comparando: {nombre_descartado} -> {coincidencia} (Similitud: {similitud}%)")
+    # logging.info(f"Comparando: {nombre_descartado} -> {coincidencia} (Similitud: {similitud}%)")
     if similitud >= umbral_similitud:
         return None  # Coincidencia encontrada, no lo incluimos en no encontrados
     return nombre_descartado  # No encontrado
 
-def procesar_descartados(ruta_descartados, nombres_limpios, ruta_no_encontrados, umbral_similitud=85):
+def procesar_descartados(ruta_descartados, nombres_limpios, ruta_no_encontrados, umbral_similitud):
     """
     Procesar nombres descartados con multiprocessing
     """
     nombres_descartados = []
     with open(ruta_descartados, newline='', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
-        for row in reader:
+        for row in tqdm(reader, desc="Leyendo nombres descartados"):
             nombre_normalizado = normalizar_nombre_limpio(row['NOMBRE DEL INVESTIGADOR'])
             nombres_descartados.append((nombre_normalizado))
         
@@ -61,7 +65,11 @@ def procesar_descartados(ruta_descartados, nombres_limpios, ruta_no_encontrados,
         
         # Usar multiprocessing para calcular similitudes en paralelo
         with Pool(cpu_count()) as pool:
-            resultados = pool.map(comparar_nombre, argumentos)
+            resultados = list(tqdm(
+                pool.imap(comparar_nombre, argumentos),
+                total=len(argumentos),
+                desc="Comparando nombres descartados"
+            ))
         
         # Filtrar los nombres no encontrados
         no_encontrados = [nombre for nombre in resultados if nombre is not None]
@@ -79,8 +87,6 @@ def reformatear_nombre(nombre):
     """
     Cambia el formato de 'NOMBRE APELLIDO' a 'APELLIDO NOMBRE'
     """
-    #print(f"Procesando: {nombre}")  # Mensaje de depuración
-
     # Separar el nombre por espacios
     partes = nombre.split()
 
@@ -90,12 +96,11 @@ def reformatear_nombre(nombre):
         apellido = ' '.join(partes[-2:])  # Los últimos dos componentes son el apellido
         nombre = ' '.join(partes[:-2])  # Tods los componentes anteriores son el nombre
         reformatted_name = f"{apellido} {nombre}"
-        #print(f"Reformateado a: {reformatted_name}")  # Mensaje de depuración
         return reformatted_name
 
     return nombre
 
-def procesar_nombres_no_encontrados(ruta_no_encontrados, nombres_limpios, ruta_no_encontrados_actualizada, umbral_similitud=85):
+def procesar_nombres_no_encontrados(ruta_no_encontrados, nombres_limpios, ruta_no_encontrados_actualizada, umbral_similitud):
     """
     Procesa nuevamente los nombres no encontrados, aplicando el formato APELLIDO NOMBRE
     """
@@ -103,7 +108,7 @@ def procesar_nombres_no_encontrados(ruta_no_encontrados, nombres_limpios, ruta_n
     nombres_descartados = []
     with open(ruta_no_encontrados, newline='', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
-        for row in reader:
+        for row in tqdm(reader, desc="Leyendo nombres no encontrados"):
             nombre = row['NOMBRE DEL INVESTIGADOR']
             nombre_reformateado = reformatear_nombre(nombre)
             nombres_descartados.append((nombre_reformateado))
@@ -116,7 +121,11 @@ def procesar_nombres_no_encontrados(ruta_no_encontrados, nombres_limpios, ruta_n
 
     # Usar multiprocessing para calcular similitudes en paralelo
     with Pool(cpu_count()) as pool:
-        resultados = pool.map(comparar_nombre, argumentos)
+        resultados = list(tqdm(
+            pool.map(comparar_nombre, argumentos),
+            total=len(argumentos),
+            desc="Reprocesando nombres no encontrados"
+            )) 
 
     # Filtrar los nombres no encontrados
     no_encontrados_actualizados = [nombre for nombre in resultados if nombre is not None]
@@ -134,17 +143,18 @@ ruta_nombres_limpios = 'Limpieza/Nombres_Limpios.csv'
 ruta_nombres_descartados = 'Limpieza/Nombres_Descartados.csv'
 ruta_nombres_no_encontrados = 'Limpieza/Nombres_No_Encontrados.csv'
 ruta_nombres_no_encontrados_2 = 'Limpieza/Nombres_No_Encontrados_Actualizados.csv'
+umbral_similitud = 85
 
 def main():
-    print("=== Procesando archivo ===")
+    logging.info("Procesando archivo.")
     nombres_limpios = leer_nombres_limpios(ruta_nombres_limpios)
-    print("=== Procesando nombres ===")
-    procesar_descartados(ruta_nombres_descartados, nombres_limpios, ruta_nombres_no_encontrados)
-    print("=== Procesando archivo de nombres no encontrados ===")
-    procesar_nombres_no_encontrados(ruta_nombres_no_encontrados, nombres_limpios, ruta_nombres_no_encontrados_2)
-    print("=== Proceso completado. ===")
-    print("El archivo Nombres_No_Encontrados.csv ha sido generado.")
+    logging.info("Procesando nombres.")
+    procesar_descartados(ruta_nombres_descartados, nombres_limpios, ruta_nombres_no_encontrados, umbral_similitud)
+    logging.info(f"El archivo {ruta_nombres_no_encontrados} ha sido generado.")
+    logging.info("Procesando archivo de nombres no encontrados.")
+    procesar_nombres_no_encontrados(ruta_nombres_no_encontrados, nombres_limpios, ruta_nombres_no_encontrados_2, umbral_similitud)
+    logging.info("Proceso completado.")
+    logging.info(f"El archivo {ruta_nombres_no_encontrados_2} ha sido generado.")
 
-# === Ejecutar el script ===
 if __name__ == "__main__":
     main()

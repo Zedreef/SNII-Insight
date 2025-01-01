@@ -1,7 +1,11 @@
 import os
 import re
+import logging
 import unicodedata
 import pandas as pd
+
+# Configuración de logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 # Configuración
 CONFIG = {
@@ -79,7 +83,7 @@ def procesar_dataframe(df):
 def guardar_archivo(df, ruta, mensaje):
     """Guarda un DataFrame en un archivo CSV."""
     df.to_csv(ruta, index=False)
-    print(mensaje)
+    logging.info(mensaje)
 
 
 # Proceso principal
@@ -136,13 +140,11 @@ def limpiar_nombres(df):
     return nombres_limpios
 
 def main():
-    print("=== Combinando archivos ===")
+    logging.info(" Combinando archivos ")
     df_combinado = combinar_archivos()
-    print("=== Procesando nombres ===")
+    logging.info(" Procesando nombres ")
     limpiar_nombres(df_combinado)
-    print("=== Proceso completado. ===")
+    logging.info(" Proceso completado. ")
 
-
-# === Ejecutar el script ===
 if __name__ == "__main__":
     main()

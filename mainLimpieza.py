@@ -1,21 +1,25 @@
-import time
+import logging
 import Limpieza.LimpiezaColumnas as LimpiezaColumnas
 import Limpieza.LimpiezaDatos as LimpiezaDatos
 import Limpieza.LimpiezaNombres as LimpiezaNombres
 import Limpieza.LimpiezaNombresFinal as LimpiezaNombresFinal
+import Limpieza.UnionNombres as UnionNombres
+import Limpieza.UltimoFiltro as UltimoFiltro
+
+# Configuración de logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 def main():
     LimpiezaColumnas.main()
     LimpiezaDatos.main()
     LimpiezaNombres.main()
     LimpiezaNombresFinal.main()
+    UnionNombres.main()
+    UltimoFiltro.main()
+    UnionNombres.main()
 
 if __name__ == "__main__":
-    inicio = time.time()
-    print("=== Empezando Limpieza de datos ===")
+
+    logging.info("Empezando Limpieza de datos")
     main()
-    fin = time.time()
-    print("=== Fin de la Limpieza de datos ===")
-    tiempo_total_segundos = fin - inicio
-    tiempo_total_horas = tiempo_total_segundos / 3600
-    print(f"Tiempo total de ejecución FINAL: {tiempo_total_horas:.2f} horas")
+    logging.info("Fin de la Limpieza de datos.")
