@@ -1,1 +1,6 @@
 streamlit
+pandas
+plotly
+scikit-learn
+statsmodels
+streamlit-option-menu

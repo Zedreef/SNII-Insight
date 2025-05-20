@@ -5,6 +5,7 @@ import re
 from Menu.utilidades import RUTA_PUBLICACIONES, RUTA_SNII, RUTA_MAESTRO, RUTA_PATENTES
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
+import plotly.express as px
 
 # ----------------------- Ruta App ---------------------------------------------
 data = pd.read_csv(RUTA_PUBLICACIONES, encoding='utf-8')
@@ -95,83 +96,6 @@ def calcular_resumen(df, autor_seleccionado):
 
     # Convertir el resumen en un DataFrame
     return pd.DataFrame(resumen)
-
-# # Función para gráfica las citas y publicaciones por año
-# def graficar_citas_publicaciones(df_autor, autor_seleccionado):
-#     # Filtrar autor
-#     df_autor = (
-#         df_autor.dropna(subset=['Investigador'])
-#           .query("Investigador == @autor_seleccionado")
-#           .copy()
-#     )
-#     df_autor = df_autor[(df_autor['Publication Year'] >= 2000) & (df_autor['Publication Year'] <= 2024)]
-#     df_autor['Year'] = df_autor['Publication Year'].astype(int)
-
-#     # Agrupar por el año y contar el número de publicaciones
-#     publicaciones_por_año = df_autor.groupby(
-#         'Year').size()  # Número de publicaciones por año
-
-#     # Obtener los años únicos para la gráfica
-#     años = sorted(publicaciones_por_año.index)
-
-#     # Agrupar por el año y sumar el total de citas
-#     citas_por_año = df_autor.groupby(
-#         'Year')['Total de Citas'].sum()  # Total de citas por año
-
-#     # Obtener el valor máximo para escalar ejes
-#     max_publicaciones = publicaciones_por_año.max()
-#     max_citas = citas_por_año.max()
-
-#     # Crear la gráfica con Plotly
-#     fig = go.Figure()
-
-#     # Agregar las barras para las publicaciones (Eje izquierdo)
-#     fig.add_trace(go.Bar(
-#         x=años,
-#         y=publicaciones_por_año,
-#         name='Publicaciones',
-#         yaxis='y1',
-#         width=0.6 
-#     ))
-
-#     # Agregar la línea para las citas (Eje derecho)
-#     fig.add_trace(go.Scatter(
-#         x=años,
-#         y=citas_por_año,
-#         mode='lines+markers',
-#         name='Citas',
-#         line=dict(color='crimson'),
-#         yaxis='y2'
-#     ))
-
-#     # Configurar los ejes
-#     fig.update_layout(
-#         template='plotly_white',
-#         title=f"Total de Citas y publicaciones para {autor_seleccionado} del periodo 2000–2024",
-#         bargap=0.2,
-#         xaxis_title='Año',
-#         yaxis=dict(
-#             title='Número Publicaciones',
-#             side='left',
-#             range=[0, max_publicaciones + 1]
-#         ),
-#         yaxis2=dict(
-#             title='Total Citas',
-#             overlaying='y',
-#             side='right',
-#             range=[0, max_citas + 1]
-#         ),
-#         legend=dict(orientation='h', x=0.95, xanchor='center', y=1.25),
-#         xaxis=dict(
-#             title='Año',
-#             tickmode='linear',
-#             dtick=1
-#         )
-#     )
-
-#     # Mostrar la gráfica en Streamlit
-#     st.plotly_chart(fig)
-
 
 # Función para gráfica las citas y publicaciones por año
 def graficar_citas_publicaciones(df_autor, autor_seleccionado, df_patentes, df_snii):
@@ -476,7 +400,7 @@ def mostrar_buscar_investigador(rutaWoS):
             # Gráfica con los datos
             graficar_citas_publicaciones(dfWoS, autor_seleccionado, df_patentes, df_snii)
             # Dividir en dos columnas con proporciones ajustadas
-            col1, col4 = st.columns([1, 2])
+            col1, col3 = st.columns([1, 2])
             col2 = st.columns([2])[0]
 
             # Mostrar el resumen en la primera columna centrado
@@ -499,13 +423,78 @@ def mostrar_buscar_investigador(rutaWoS):
                 st.write("#### Datos de Publicaciones ")
                 st.dataframe(df_publicaciones)
 
-            with col4:
+            with col3:
                 st.write("#### Datos del SNII")
                 if df_snii.empty:
                     st.write("No se encontraron datos del SNII para este autor.")
                 else:
                     # Mostrar el rango de años activos y los datos del SNII
                     st.dataframe(df_snii.T)
+
+            # Agregar las gráficas de pastel en una sola línea
+            col4_1, col4_2, col4_3 = st.columns(3)
+            with col4_1:
+                if 'ÁREA DEL CONOCIMIENTO' in df_snii.columns:
+                    areas = df_snii['ÁREA DEL CONOCIMIENTO'].explode().dropna()
+                    if not areas.empty:
+                        fig_area = px.pie(
+                            names=areas,
+                            title="Áreas del Conocimiento",
+                            hole=0.3
+                        )
+                        st.plotly_chart(fig_area, use_container_width=True)
+            with col4_2:
+                if 'DISCIPLINA' in df_snii.columns:
+                    disciplinas = df_snii['DISCIPLINA'].explode().dropna()
+                    if not disciplinas.empty:
+                        fig_disciplina = px.pie(
+                            names=disciplinas,
+                            title="Disciplinas",
+                            hole=0.3
+                        )
+                        st.plotly_chart(fig_disciplina, use_container_width=True)
+            with col4_3:
+                if 'SUBDISCIPLINA' in df_snii.columns:
+                    subdisciplinas = df_snii['SUBDISCIPLINA'].explode().dropna()
+                    if not subdisciplinas.empty:
+                        fig_subdisciplina = px.pie(
+                            names=subdisciplinas,
+                            title="Subdisciplinas",
+                            hole=0.3
+                        )
+                        st.plotly_chart(fig_subdisciplina, use_container_width=True)
+
+            # Gráfica de pastel: Publicaciones del autor vs. total general
+            total_publicaciones_autor = dfWoS[dfWoS['Investigador'] == autor_seleccionado]['Title'].count()
+            total_publicaciones_otros = dfWoS['Title'].count() - total_publicaciones_autor
+
+            # Gráfica de pastel: Patentes del autor vs. total general
+            if not patentes.empty:
+                total_patentes_autor = df_patentes['Total Patentes'].sum() if not df_patentes.empty else 0
+                total_patentes_general = patentes['Patents'].sum() if 'Patents' in patentes.columns else patentes['Total Patentes'].sum()
+                total_patentes_otros = total_patentes_general - total_patentes_autor
+            else:
+                total_patentes_autor = 0
+                total_patentes_otros = 0
+
+            col_pie1, col_pie2 = st.columns(2)
+            with col_pie1:
+                fig_pub = px.pie(
+                    names=['Autor seleccionado', 'Otros investigadores'],
+                    values=[total_publicaciones_autor, total_publicaciones_otros],
+                    title="Proporción de publicaciones",
+                    hole=0.3
+                )
+                st.plotly_chart(fig_pub, use_container_width=True)
+            with col_pie2:
+                if not patentes.empty:
+                    fig_pat = px.pie(
+                        names=['Autor seleccionado', 'Otros investigadores'],
+                        values=[total_patentes_autor, total_patentes_otros],
+                        title="Proporción de patentes",
+                        hole=0.3
+                    )
+                    st.plotly_chart(fig_pat, use_container_width=True)
 
         except Exception as e:
             st.error(f"Error procesando los datos: {e}")

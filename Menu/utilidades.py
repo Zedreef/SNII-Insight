@@ -11,14 +11,23 @@ import streamlit as st
 # RUTA_PUBLICACIONES = 'Analisis/datasetWoS.csv
 # RUTA_PATENTES = 'Analisis/datasetPatentes.csv'
 # RUTA_PUBLICACIONES_KERAS = 'Analisis/Entrena_Publicaciones.keras'
+RUTA_BRUTOS  = '/mount/src/prueba/Autores WoS'
+RUTA_GUARDADO  = '/mount/src/prueba/Autores WoS Limpios'
+RUTA_PUBLICACIONES  = '/mount/src/prueba/Analisis/datasetWoS.csv'
+RUTA_SNII  = '/mount/src/prueba/Analisis/datasetSNII.csv'
+RUTA_PATENTES  = '/mount/src/prueba/Analisis/datasetPatentes.csv'
+RUTA_MAESTRO  = '/mount/src/prueba/Analisis/Nombres_PxS.csv'
+RUTA_PUBLICACIONES_KERAS = '/mount/src/prueba/Analisis/Entrena_Publicaciones.keras'
+RUTA_ANALISIS = '/mount/src/prueba/Analisis/analisisEntrenamiento.csv'
 # ----------------------- Ruta GitHub ------------------------------------------
-RUTA_BRUTOS  = 'Autores WoS'
-RUTA_GUARDADO  = 'Autores WoS Limpios'
-RUTA_PUBLICACIONES  = 'Analisis/datasetWoS.csv'
-RUTA_SNII  = 'Analisis/datasetSNII.csv'
-RUTA_PATENTES  = 'Analisis/datasetPatentes.csv'
-RUTA_MAESTRO  = 'Analisis/Nombres_PxS.csv'
-RUTA_PUBLICACIONES_KERAS = 'Analisis/Entrena_Publicaciones.keras'
+# RUTA_BRUTOS  = 'Autores WoS'
+# RUTA_GUARDADO  = 'Autores WoS Limpios'
+# RUTA_PUBLICACIONES  = 'Analisis/datasetWoS.csv'
+# RUTA_SNII  = 'Analisis/datasetSNII.csv'
+# RUTA_PATENTES  = 'Analisis/datasetPatentes.csv'
+# RUTA_MAESTRO  = 'Analisis/Nombres_PxS.csv'
+# RUTA_PUBLICACIONES_KERAS = 'Analisis/Entrena_Publicaciones.keras'
+# RUTA_ANALISIS = 'Analisis/analisisEntrenamiento.csv'
 # -------------------------------------------------------------------------------
 
 # ----------------------- Funciones --------------------------------------------
