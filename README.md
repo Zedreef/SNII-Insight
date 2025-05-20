@@ -1,20 +1,20 @@
-# 🎈 Blank app template
+# 📋 Minería de Datos para Evaluar la Relación entre Publicaciones y Patentes
 
-A simple Streamlit app template for you to modify!
+Análisis de investigadores con patentes.
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://snii-app-9q5qqipoxll.streamlit.app/)
 
-### How to run it on your own machine
+### Cómo ejecutarlo en tu propia máquina
 
-1. Install the requirements
+1. Instalar los requisitos
 
    ```
    $ pip install -r requirements.txt
    ```
 
-2. Run the app
+2. Ejecutar la aplicación
 
    ```
    $ streamlit run streamlit_app.py
    ```
-"LIU, HONGBO" aparece en 2006 - 2017 , 2021 - 2023
+
